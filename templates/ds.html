@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block headding %}
+<h1 class="mt-5">Differentiation Suggestor</h1>
+{% endblock %}
+
+{% block button %}
+<button id="gpt-button" class="btn btn-primary">Ask Differentiation</button>
+{% endblock %}
+
+
+<script>
+
+    var counter = 1;
+
+    $("#gpt-button").click(function () {
+
+        var question = $('#chat-input').val();
+        let html_data = '';
+        html_data +=
+            `<a href="#" class="list-group-item list-group-item-action d-flex gap-3 py-3">
+    <img src="{{ url_for('static', filename='images/favicon.png') }}" alt="twbs" width="32" height="32" class="rounded-circle flex-shrink-0">
+    <div class="d-flex gap-2 w-100 justify-content-between">
+      <div>
+        <p class="mb-0 opacity-75">${question}</p>
+      </div>
+    </div>
+  </a>`;
+
+        $('#chat-input').val('');
+        $('#list-group').append(html_data);
+
+        $('#list-group a:last-child').attr("id", "app-" + counter);
+
+        // alert($('#list-group div:last-child').attr("id"));
+        counter++;
+
+
+        $.ajax({
+            type: "POST",
+            url: "/",
+            data: { 'prompt': question },
+            success: function (data) {
+                let gpt_data = '';
+                var input = data.answer;
+                var input = input.split(/\n{2,}/);
+                for (var i = 0; i < input.length; i++) {
+                    var paragraph = input[i];
+                    let gpt_data = '';
+                    gpt_data += `<div class="list-group-item d-flex gap-3 py-3" style="background-color: #C7FF33;">
+            <img src="{{ url_for('static', filename='images/11865338.png') }}" alt="twbs" width="32" height="32" class="rounded-circle flex-shrink-0">
+            <div class="d-flex flex-column w-100 justify-content-between">
+              <p class="mb-0 opacity-75">${paragraph}</p>
+            </div>
+            <div class="ml-auto">
+              <button class="btn btn-secondary expand-button">Expand</button>
+            </div>
+          </div>`;
+                    var paragraph = ''
+
+                    $('#list-group').append(gpt_data);
+
+                }
+
+            }
+        })
+    });
+
+    // Use delegated click event handler for the Expand button
+    $(document).on('click', ".expand-button", function () {
+        var expandedText = $(this).closest('.list-group-item').find('.opacity-75').text();
+        var nextTag = $(this).closest('.list-group-item')
+
+        $.ajax({
+            type: "POST",
+            url: "/expand",
+            data: { 'prompt': expandedText },
+            success: function (data) {
+                let resp_data = '';
+                resp_data += `<div class="list-group-item d-flex gap-3 py-3" style="background-color: #FFCCCC;">
+      <div src="{{ url_for('static', filename='images/11865338.png') }}" alt="twbs" width="32" height="32" class="rounded-circle flex-shrink-0">
+      <div class="d-flex flex-column w-100 justify-content-between">
+        <p class="mb-0 opacity-75">${data.answer}</p>
+      </div>
+      <div class="ml-auto">
+        <button class="btn btn-secondary expand-button">Expand</button>
+      </div>
+    </div>`;
+                nextTag.after(resp_data)
+
+
+            }
+        })
+    });
+
+    $(document).on('click', "#download-button", function (){
+        alert('HII')
+        $('.list-group-item').each(function() {
+            var expandedText = $(this).find('.opacity-75').text();
+            alert(expandedText);
+        
+        });
+
+    });
+
+</script>
